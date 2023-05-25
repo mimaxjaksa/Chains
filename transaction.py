@@ -11,10 +11,11 @@ class Transaction:
     
     def process(self):
         self.from_w.take_amount(self.amount)
-        self.to_w.add_amount(self.amount)
+        # self.to_w.add_amount(self.amount)
+        self.to_w.utxo.append(self)
         self.processed = True
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Transaction: \n\tmessage: {self.message}, \n\tfrom wallet: {self.from_w.name}, \n\tto wallet: {self.to_w.name}, \n\tamount: {self.amount}, \n\tprocessed: {self.processed}"
 
 
