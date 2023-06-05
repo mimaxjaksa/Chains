@@ -6,7 +6,6 @@ class Wallet():
         self.amount = amount
         self.utxo = []
         
-        
         # random_seed = random.randint(0, 1000)
         # self.private_key = hash_unicode(str(random_seed))
         # self.private_key = 0xA0DC65FFCA799873CBEA0AC274015B9526505DAAAED385155425F7337704883E #find a way how to generate this
