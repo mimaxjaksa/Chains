@@ -5,8 +5,13 @@ Some sources:
 - https://wiki.openssl.org/index.php/Elliptic_Curve_Cryptography
 - https://onyb.gitbook.io/secp256k1-python/point-addition-in-python
 
+
+Most of the code below copied from https://onyb.gitbook.io/secp256k1-python/point-addition-in-python, check it out!
+
 """
 from dataclasses import dataclass
+import hashlib
+from typing import Tuple
 
 @dataclass
 class PrimeGaloisField:
@@ -183,13 +188,64 @@ N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
 I = Point(x=None, y=None, curve=secp256k1)
 
+def public_key(private_key: int) -> Tuple[int, int]:
+    K = private_key*G
+    return K.x.value, K.y.value
+
+def sha(a: str) -> str:
+    return hashlib.sha256(a.encode('utf-8')).hexdigest()
+
+def ripemd160(a: str) -> str:
+    return hashlib.new('ripemd160', a.encode('utf-8')).hexdigest()
+
+def raw_adress(public_key: str) -> str:
+    # Here maybe accept Point and concat strings of both fields?
+    s = ripemd160(sha(public_key))
+    # return int(s, 16)
+    return s
+
+def base_58(num: int):
+    """ Returns num in a base58-encoded string """
+    encode = ''
+    alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+    base_count = len(alphabet)
+
+    num = int(num, 16)
+    if (num < 0):
+        return ''
+
+    while (num >= base_count):	
+        mod = int(num % base_count)
+        encode = alphabet[mod] + encode
+        num = num // base_count
+
+    if (num):
+        encode = alphabet[num] + encode
+
+    return encode
+
+def base_58_check(raw_adress: str) -> str:
+    prefix = '00'
+    a = prefix + raw_adress
+    checksum = sha(sha(a))[-4:]
+    a += checksum
+    return base_58(a)
+
+
 if __name__ == "__main__":
-    k = 0x1E99423A4ED27608A15A2616A2B0E9E52CED330AC530EDCC32C8FFC6A526AEDD
-    print(G.x.value)
-    print(G.y.value)
+    # k = 0x1E99423A4ED27608A15A2616A2B0E9E52CED330AC530EDCC32C8FFC6A526AEDD
+    k = 0x3aba4162c7251c891207b747840551a71939b0de081f85c4e44cf7c13e41daa6
+    print()
+    print(f"Private key (decimal): {k}")
+    print(f"Private key (hex): {format(k, '#x')}")
+    print()
 
-    a = k*G
+    K = public_key(k)
+    print(f"Public key (decimal): {K}")
+    print(f"Public key (hex): {format(K[0], '#x')}, {format(K[1], '#x')}")
 
-    print(a.x)
-    print(a.y)
-    
+    raw_a = raw_adress(str(K))
+    A = base_58_check(raw_a)
+    print()
+    print(f"Adress: {A}")
+    # print(type(A))
